@@ -294,6 +294,7 @@ class Evaluator:
         """
         e = Evaluator(opt)
         val_tools_path = ROOT / 'val_utils'
+        #val_tools_path = ROOT / '/home/ubuntu/cs231n'
         e.download_mot_eval_tools(val_tools_path)
         if any(opt.benchmark == s for s in ['MOT16', 'MOT17', 'MOT20']):
             e.download_mot_dataset(val_tools_path, opt.benchmark)
@@ -310,7 +311,6 @@ class Evaluator:
         writer.add_scalar('IDF1', combined_results['IDF1'])
 
         return combined_results
-
 
 def parse_opt():
     parser = argparse.ArgumentParser()

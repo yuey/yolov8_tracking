@@ -1,5 +1,5 @@
 # replace with the root containing the decompressed train/, test/, challenge/ folders
-DATA_DIR=~/challenge_data/tracking-2023
+DATA_DIR=/home/ubuntu/cs231n/data/tracking-2023
 
 DST_DIR=val_utils/data/SNMOT/test_small
 mkdir -p ${DST_DIR}
