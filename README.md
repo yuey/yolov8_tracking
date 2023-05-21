@@ -37,6 +37,27 @@ cd yolov8_tracking
 pip install -r requirements.txt  # install dependencies
 ```
 
+## SoccerNet data download
+```
+pip install SoccerNet --upgrade
+
+import SoccerNet
+from SoccerNet.Downloader import SoccerNetDownloader
+mySoccerNetDownloader.password = <the password>
+mySoccerNetDownloader=SoccerNetDownloader(LocalDirectory="/home/ubuntu/challenge_data")
+mySoccerNetDownloader.downloadDataTask(task="tracking-2023", split=["train", "test", "chalenge"])
+```
+
+## SoccerNet test
+```
+git clone https://github.com/mikel-brostrom/yolov8_tracking.git
+cd yolov8_tracking
+python3 val.py
+# edit copy.sh to point to where you decompressed the soccer net data
+./copy.sh
+./test_small.sh
+```
+
 <details>
 <summary>Tutorials</summary>
 
