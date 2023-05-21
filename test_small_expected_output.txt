@@ -1,0 +1,81 @@
+Eval Config:
+USE_PARALLEL         : True                          
+NUM_PARALLEL_CORES   : 4                             
+BREAK_ON_ERROR       : True                          
+RETURN_ON_ERROR      : False                         
+LOG_ON_ERROR         : /home/ubuntu/dev/yolov8_tracking/val_utils/error_log.txt
+PRINT_RESULTS        : True                          
+PRINT_ONLY_COMBINED  : False                         
+PRINT_CONFIG         : True                          
+TIME_PROGRESS        : True                          
+DISPLAY_LESS_PROGRESS : False                         
+OUTPUT_SUMMARY       : True                          
+OUTPUT_EMPTY_CLASSES : True                          
+OUTPUT_DETAILED      : True                          
+PLOT_CURVES          : True                          
+
+MotChallenge2DBox Config:
+PRINT_CONFIG         : True                          
+GT_FOLDER            : val_utils/data/SNMOT/test_small
+TRACKERS_FOLDER      : runs/val/exp3                 
+OUTPUT_FOLDER        : None                          
+TRACKERS_TO_EVAL     : ['labels']                    
+CLASSES_TO_EVAL      : ['pedestrian']                
+BENCHMARK            :                               
+SPLIT_TO_EVAL        : train                         
+INPUT_AS_ZIP         : False                         
+DO_PREPROC           : True                          
+TRACKER_SUB_FOLDER   :                               
+OUTPUT_SUB_FOLDER    :                               
+TRACKER_DISPLAY_NAMES : None                          
+SEQMAP_FOLDER        : None                          
+SEQMAP_FILE          : None                          
+SEQ_INFO             : {'SNMOT-117': None, 'SNMOT-118': None, 'SNMOT-119': None, 'SNMOT-116': None}
+GT_LOC_FORMAT        : {gt_folder}/{seq}/gt/gt.txt   
+SKIP_SPLIT_FOL       : True                          
+
+CLEAR Config:
+METRICS              : ['HOTA', 'CLEAR', 'Identity'] 
+THRESHOLD            : 0.5                           
+PRINT_CONFIG         : True                          
+
+Identity Config:
+METRICS              : ['HOTA', 'CLEAR', 'Identity'] 
+THRESHOLD            : 0.5                           
+PRINT_CONFIG         : True                          
+
+Evaluating 1 tracker(s) on 4 sequence(s) for 1 class(es) on MotChallenge2DBox dataset using the following metrics: HOTA, CLEAR, Identity, Count
+
+
+Evaluating labels
+
+
+All sequences for labels finished in 1.44 seconds
+
+HOTA: labels-pedestrian            HOTA      DetA      AssA      DetRe     DetPr     AssRe     AssPr     LocA      OWTA      HOTA(0)   LocA(0)   HOTALocA(0)
+SNMOT-116                          38.904    49.87     30.533    52.78     78.097    32.637    73.66     81.623    40.123    50.424    76.732    38.692    
+SNMOT-117                          51.116    59.229    44.278    62.754    79.327    46.424    81.076    82.138    52.703    66.256    77.93     51.634    
+SNMOT-118                          48.94     59.563    40.334    64.125    74.853    43.846    72.291    79.567    50.855    66.43     74.371    49.405    
+SNMOT-119                          60.484    61.027    60.053    65.011    80.772    63.574    80.238    83.932    62.48     75.442    80.669    60.858    
+COMBINED                           49.677    56.996    43.524    60.757    78        46.473    76.903    81.678    51.406    64.426    77.165    49.715    
+
+CLEAR: labels-pedestrian           MOTA      MOTP      MODA      CLR_Re    CLR_Pr    MTR       PTR       MLR       sMOTA     CLR_TP    CLR_FN    CLR_FP    IDSW      MT        PT        ML        Frag      
+SNMOT-116                          62.138    78.649    62.993    65.288    96.604    29.63     62.963    7.4074    48.199    7482      3978      263       98        8         17        2         227       
+SNMOT-117                          74.114    79.044    74.725    76.916    97.229    58.065    32.258    9.6774    57.995    7054      2117      201       56        18        10        3         204       
+SNMOT-118                          74.604    76.415    75.062    80.365    93.81     52        32        16        55.65     8775      2144      579       50        13        8         4         247       
+SNMOT-119                          74.74     81.336    75.056    77.771    96.626    65.385    23.077    11.538    60.224    6644      1899      232       27        17        6         3         116       
+COMBINED                           70.958    78.684    71.534    74.714    95.917    51.376    37.615    11.009    55.031    29955     10138     1275      231       56        41        12        794       
+
+Identity: labels-pedestrian        IDF1      IDR       IDP       IDTP      IDFN      IDFP      
+SNMOT-116                          48.133    40.332    59.677    4622      6838      3123      
+SNMOT-117                          62.182    55.686    70.393    5107      4064      2148      
+SNMOT-118                          60.958    56.589    66.057    6179      4740      3175      
+SNMOT-119                          74.946    67.634    84.031    5778      2765      1098      
+COMBINED                           60.811    54.089    69.44     21686     18407     9544      
+
+Count: labels-pedestrian           Dets      GT_Dets   IDs       GT_IDs    
+SNMOT-116                          7745      11460     84        27        
+SNMOT-117                          7255      9171      70        31        
+SNMOT-118                          9354      10919     63        25        
+SNMOT-119                          6876      8543      45        26        
+COMBINED                           31230     40093     262       109       
