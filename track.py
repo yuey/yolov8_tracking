@@ -74,6 +74,8 @@ def run(args):
     combined_args = {**predictor.args.__dict__, **args}
     # overwrite default args
     predictor.args = IterableSimpleNamespace(**combined_args)
+    predictor.args.line_width = 2
+    predictor.args.show_conf = False
 
     # setup source and model
     if not predictor.model:
