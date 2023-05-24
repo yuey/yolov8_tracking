@@ -58,6 +58,11 @@ python3 val.py
 ./test_small.sh
 ```
 
+## make a video
+```
+ffmpeg -f image2 -i runs/val/yolyv8x.pt__ocsort__test_small/SNMOT-117/%06d.jpg -vf scale=-1:720 -preset veryslow videos/yolov8x.pt__ocsort__SNMOT-117.mp4
+```
+
 <details>
 <summary>Tutorials</summary>
 

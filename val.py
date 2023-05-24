@@ -201,9 +201,9 @@ class Evaluator:
 
                 dst_seq_path = seq_path.parent / seq_path.parent.name
 
-                if not dst_seq_path.is_dir():
-                    src_seq_path = seq_path
-                    shutil.move(str(src_seq_path), str(dst_seq_path))
+                # if not dst_seq_path.is_dir():
+                #     src_seq_path = seq_path
+                #     shutil.move(str(src_seq_path), str(dst_seq_path))
 
                 p = subprocess.Popen([
                     sys.executable, "track.py",
@@ -213,7 +213,7 @@ class Evaluator:
                     "--conf", str(self.opt.conf),
                     "--imgsz", str(self.opt.imgsz[0]),
                     "--classes", str(0),
-                    "--name", save_dir.name,
+                    "--name", os.path.join(save_dir.name, dst_seq_path.name),
                     "--save-txt",
                     "--project", self.opt.project,
                     "--device", str(tracking_subprocess_device),
@@ -252,6 +252,7 @@ class Evaluator:
         print(p.stdout)
 
         # save MOT results in txt 
+        os.makedirs(save_dir, exist_ok=True)
         with open(save_dir / 'MOT_results.txt', 'w') as f:
             f.write(p.stdout)
         # copy tracking method config to exp folder
