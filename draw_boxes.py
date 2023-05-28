@@ -1,0 +1,68 @@
+import csv
+import cv2
+import os
+
+sample = "SNMOT-118"
+
+NUM_FRAMES = 750
+IMG_FMT = (
+    f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/{sample}/"
+    + "{:06d}.jpg"
+)
+GT_TXT = f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/gt/gt.txt"
+OUT_DIR = f"/home/ubuntu/dev/yolov8_tracking/runs/gt/{sample}/"
+os.makedirs(OUT_DIR, exist_ok=True)
+OUT_IMG_FMT = OUT_DIR + "{:06d}.jpg"
+
+MODULO_COLORS = [
+    (255, 0, 0),  # Red
+    (0, 0, 255),  # Blue
+    (255, 255, 0),  # Yellow
+    (0, 255, 255),  # Cyan
+    (255, 0, 255),  # Magenta
+    (128, 0, 128),  # Purple
+    (255, 165, 0),  # Orange
+    (255, 192, 203),  # Pink
+    (128, 0, 0),  # Maroon
+    (0, 0, 128),  # Navy
+    (0, 128, 128),  # Teal
+    (128, 255, 0),  # Greenish
+    (192, 192, 192),  # Silver
+    (0, 0, 0),  # Black
+    (105, 105, 105),  # DimGray
+    (255, 250, 240),  # FloralWhite
+    (128, 0, 255),  # Purpleish
+    (210, 105, 30),  # Chocolate
+    (70, 130, 180),  # SteelBlue
+    (0, 255, 127),  # SpringGreen
+]
+
+boxes = {}
+
+with open(GT_TXT) as file:
+    reader = csv.reader(file)
+    for row in reader:
+        key = int(row[0])
+        values = list(map(int, row[1:]))
+
+        if key not in boxes:
+            boxes[key] = []
+
+        boxes[key].append(values)
+
+
+for frame in range(1, NUM_FRAMES + 1):
+    img = cv2.imread(IMG_FMT.format(frame))
+
+    frame_boxes = boxes.get(frame, [])
+    for frame_box in frame_boxes:
+        tracklet_id = frame_box[0]
+        color = MODULO_COLORS[tracklet_id % len(MODULO_COLORS)][::-1]
+        [xmin, ymin, width, height] = frame_box[1:5]
+        xmax = xmin + width
+        ymax = ymin + height
+        cv2.rectangle(
+            img, (xmin, ymin), (xmax, ymax), color=color, thickness=2
+        )
+        cv2.putText(img, str(tracklet_id), (xmin, ymin - 7), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6, color=color, thickness=2)
+    cv2.imwrite(OUT_IMG_FMT.format(frame), img)

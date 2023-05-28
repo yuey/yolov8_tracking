@@ -1,1 +1,2 @@
-python3 val.py --tracking-method bytetrack --benchmark SNMOT --split test_small --processes-per-device 4
+python3 val.py --yolo-model yolov8x.pt --tracking-method ocsort --benchmark SNMOT --split test_small --name orig --processes-per-device 4
+python3 val.py --yolo-model yolov8x_tuned_epochs15_best.pt --tracking-method ocsort --benchmark SNMOT --split test_small --name ours --processes-per-device 4
