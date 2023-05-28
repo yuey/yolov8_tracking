@@ -9,8 +9,15 @@ IMG_FMT = (
     f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/{sample}/"
     + "{:06d}.jpg"
 )
-GT_TXT = f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/gt/gt.txt"
-OUT_DIR = f"/home/ubuntu/dev/yolov8_tracking/runs/gt/{sample}/"
+# Ground truth
+# LABELS_TXT = f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/gt/gt.txt"
+# OUT_DIR = f"/home/ubuntu/dev/yolov8_tracking/runs/gt/{sample}/"
+
+# Test run
+name = "original_yolov8x"
+LABELS_TXT = f'/home/ubuntu/dev/yolov8_tracking/runs/val/{name}/labels/{sample}.txt'
+OUT_DIR = f'/home/ubuntu/dev/yolov8_tracking/runs/val/{name}/{sample}_newvis/'
+
 os.makedirs(OUT_DIR, exist_ok=True)
 OUT_IMG_FMT = OUT_DIR + "{:06d}.jpg"
 
@@ -39,8 +46,9 @@ MODULO_COLORS = [
 
 boxes = {}
 
-with open(GT_TXT) as file:
-    reader = csv.reader(file)
+with open(LABELS_TXT) as file:
+    #reader = csv.reader(file, delimiter=",")  # gt
+    reader = csv.reader(file, delimiter=" ")  # Test run results are space-seperated
     for row in reader:
         key = int(row[0])
         values = list(map(int, row[1:]))
