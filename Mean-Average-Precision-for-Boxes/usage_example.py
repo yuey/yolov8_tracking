@@ -75,7 +75,7 @@ if __name__ == '__main__':
     vfunc = np.vectorize(map_numbers_to_strings)
     # apply it to the second column of the array
     ann[:, 1] = vfunc(ann[:, 1])
-    # print(ann)
+    print(ann)
     # for i in ann.tolist():
     #     if i[1] == 'ball':
     #         print(i)
@@ -84,9 +84,10 @@ if __name__ == '__main__':
     ##########
     det = pd.read_csv(f'{det_folder}/SNMOT-116/deter_base_bbox.tsv', sep='\t', header=None)
     class_column = 7  # 6 is enum, 7 is string
+    det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball')
     det = det.values[:, [0, class_column, 5, 1, 2, 3, 4]]
     print(det)
-    for i in ann.tolist():
+    for i in det.tolist():
         if i[1] == 'ball':
             print(i)
     ##########
