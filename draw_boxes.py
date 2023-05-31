@@ -2,25 +2,6 @@ import csv
 import cv2
 import os
 
-sample = "SNMOT-118"
-
-NUM_FRAMES = 750
-IMG_FMT = (
-    f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/{sample}/"
-    + "{:06d}.jpg"
-)
-# Ground truth
-# LABELS_TXT = f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/gt/gt.txt"
-# OUT_DIR = f"/home/ubuntu/dev/yolov8_tracking/runs/gt/{sample}/"
-
-# Test run
-name = "original_yolov8x"
-LABELS_TXT = f'/home/ubuntu/dev/yolov8_tracking/runs/val/{name}/labels/{sample}.txt'
-OUT_DIR = f'/home/ubuntu/dev/yolov8_tracking/runs/val/{name}/{sample}_newvis/'
-
-os.makedirs(OUT_DIR, exist_ok=True)
-OUT_IMG_FMT = OUT_DIR + "{:06d}.jpg"
-
 MODULO_COLORS = [
     (255, 0, 0),  # Red
     (0, 0, 255),  # Blue
@@ -43,34 +24,56 @@ MODULO_COLORS = [
     (70, 130, 180),  # SteelBlue
     (0, 255, 127),  # SpringGreen
 ]
+NUM_FRAMES = 750
 
-boxes = {}
+for sample in ["SNMOT-116", "SNMOT-117", "SNMOT-118", "SNMOT-119"]:
 
-with open(LABELS_TXT) as file:
-    #reader = csv.reader(file, delimiter=",")  # gt
-    reader = csv.reader(file, delimiter=" ")  # Test run results are space-seperated
-    for row in reader:
-        key = int(row[0])
-        values = list(map(int, row[1:]))
+    IMG_FMT = (
+        f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/{sample}/"
+        + "{:06d}.jpg"
+    )
+    # Ground truth
+    # LABELS_TXT = f"/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT/test_small/{sample}/gt/gt.txt"
+    # OUT_DIR = f"/home/ubuntu/dev/yolov8_tracking/runs/gt/{sample}/"
 
-        if key not in boxes:
-            boxes[key] = []
+    # Test run
+    # name = "val/original_yolov8x"
+    name = "evolve/ev_ocsort15"
+    LABELS_TXT = f'/home/ubuntu/dev/yolov8_tracking/runs/{name}/labels/{sample}.txt'
+    OUT_DIR = f'/home/ubuntu/dev/yolov8_tracking/runs/{name}/{sample}_newvis/'
 
-        boxes[key].append(values)
+    os.makedirs(OUT_DIR, exist_ok=True)
+    OUT_IMG_FMT = OUT_DIR + "{:06d}.jpg"
+
+    boxes = {}
+
+    with open(LABELS_TXT) as file:
+        #reader = csv.reader(file, delimiter=",")  # gt
+        reader = csv.reader(file, delimiter=" ")  # Test run results are space-seperated
+        for row in reader:
+            key = int(row[0])
+            values = list(map(int, row[1:]))
+
+            if key not in boxes:
+                boxes[key] = []
+
+            boxes[key].append(values)
 
 
-for frame in range(1, NUM_FRAMES + 1):
-    img = cv2.imread(IMG_FMT.format(frame))
+    for frame in range(1, NUM_FRAMES + 1):
+        img = cv2.imread(IMG_FMT.format(frame))
+        cv2.putText(img, f'f{frame}', (10, 1080 - 7), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(255,255,255), thickness=2)
 
-    frame_boxes = boxes.get(frame, [])
-    for frame_box in frame_boxes:
-        tracklet_id = frame_box[0]
-        color = MODULO_COLORS[tracklet_id % len(MODULO_COLORS)][::-1]
-        [xmin, ymin, width, height] = frame_box[1:5]
-        xmax = xmin + width
-        ymax = ymin + height
-        cv2.rectangle(
-            img, (xmin, ymin), (xmax, ymax), color=color, thickness=2
-        )
-        cv2.putText(img, str(tracklet_id), (xmin, ymin - 7), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6, color=color, thickness=2)
-    cv2.imwrite(OUT_IMG_FMT.format(frame), img)
+        frame_boxes = boxes.get(frame, [])
+        for frame_box in frame_boxes:
+            tracklet_id = frame_box[0]
+            color = MODULO_COLORS[tracklet_id % len(MODULO_COLORS)][::-1]
+            [xmin, ymin, width, height] = frame_box[1:5]
+            xmax = xmin + width
+            ymax = ymin + height
+            cv2.rectangle(
+                img, (xmin, ymin), (xmax, ymax), color=color, thickness=2
+            )
+            h_centering_offset = 8 * len(str(tracklet_id))
+            cv2.putText(img, str(tracklet_id), (xmin + width // 2 - h_centering_offset, ymin - 7), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8, color=color, thickness=2)
+        cv2.imwrite(OUT_IMG_FMT.format(frame), img)
