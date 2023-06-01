@@ -18,7 +18,7 @@ except:
 
 def get_real_annotations(table):
     res = dict()
-    ids = table['ImageID'].values.astype(int)
+    ids = table['ImageID'].values.astype(str)
     labels = table['LabelName'].values.astype(str)
     xmin = table['XMin'].values.astype(np.float32)
     xmax = table['XMax'].values.astype(np.float32)
@@ -40,7 +40,7 @@ def get_real_annotations(table):
 
 def get_detections(table):
     res = dict()
-    ids = table['ImageID'].values.astype(int)
+    ids = table['ImageID'].values.astype(str)
     labels = table['LabelName'].values.astype(str)
     scores = table['Conf'].values.astype(np.float32)
     xmin = table['XMin'].values.astype(np.float32)

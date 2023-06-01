@@ -9,6 +9,17 @@ import pandas as pd
 
 IMG_WIDTH, IMG_HEIGHT = 1920, 1080
 
+SAMPLES = [
+    "SNMOT-116", "SNMOT-117", "SNMOT-118", "SNMOT-119", "SNMOT-120", "SNMOT-121", "SNMOT-122", "SNMOT-123", "SNMOT-124", "SNMOT-125",
+    "SNMOT-126", "SNMOT-127", "SNMOT-128", "SNMOT-129", "SNMOT-130", "SNMOT-131", "SNMOT-132", "SNMOT-133", "SNMOT-134", "SNMOT-135",
+    "SNMOT-136", "SNMOT-137", "SNMOT-138", "SNMOT-139", "SNMOT-140", "SNMOT-141", "SNMOT-142", "SNMOT-143", "SNMOT-144", "SNMOT-145",
+    "SNMOT-146", "SNMOT-147", "SNMOT-148", "SNMOT-149", "SNMOT-150", "SNMOT-187", "SNMOT-188", "SNMOT-189", "SNMOT-190", "SNMOT-191",
+    "SNMOT-192", "SNMOT-193", "SNMOT-194", "SNMOT-195", "SNMOT-196", "SNMOT-197", "SNMOT-198", "SNMOT-199", "SNMOT-200",
+]
+
+
+PRINT_DET_BALL = False
+
 
 def xywh_to_norm_xxyy(box_seq):
     xmin_col = -4
@@ -60,44 +71,51 @@ if __name__ == '__main__':
     # Version 2
 
     gt_folder = '/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT'
-    det_folder = '/home/ubuntu/dev/yolov8_tracking/runs/val/transformer_orig'
+    det_folder = '/home/ubuntu/dev/yolov8_tracking/runs/detr_baseline_all_test_metrics'
 
-    ##########
-    ann = pd.read_csv(f'{gt_folder}/test_small/SNMOT-116/gt/gt.txt', header=None)
-    # parse gameinfo (trackletID to our class string here)
-    ann.iloc[:, 1] = ann.iloc[:, 1].astype(str)
-    ann = ann.values[:, [0, 1, 2, 3, 4, 5]]
+    anns, dets = [], []
+    for sample in SAMPLES:
 
-    gameinfo_dict = parse_gameinfo(f'{gt_folder}/test_small/SNMOT-116/gameinfo.ini')
-    def map_numbers_to_strings(number):
-        return 'ball' if gameinfo_dict[number] == 'ball' else 'person'
-    # vectorize the function
-    vfunc = np.vectorize(map_numbers_to_strings)
-    # apply it to the second column of the array
-    ann[:, 1] = vfunc(ann[:, 1])
-    print(ann)
-    # for i in ann.tolist():
-    #     if i[1] == 'ball':
-    #         print(i)
-    ##########
+        ##########
+        ann = pd.read_csv(f'{gt_folder}/test/{sample}/gt/gt.txt', header=None)
+        ann.iloc[:, 0] = ann.iloc[:, 0].apply(lambda x: f'{sample}:{x:03d}')
+        # parse gameinfo (trackletID to our class string here)
+        ann_class_column = 1
+        gameinfo_dict = parse_gameinfo(f'{gt_folder}/test/{sample}/gameinfo.ini')
+        def map_numbers_to_strings(number):
+            return 'ball' if gameinfo_dict[number] == 'ball' else 'person'
+        ann.iloc[:, ann_class_column] = ann.iloc[:, ann_class_column].astype(str).apply(map_numbers_to_strings)
+        ann = ann.values[:, [0, 1, 2, 3, 4, 5]]
 
-    ##########
-    det = pd.read_csv(f'{det_folder}/SNMOT-116/deter_base_bbox.tsv', sep='\t', header=None)
-    class_column = 7  # 6 is enum, 7 is string
-    det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball')
-    det = det.values[:, [0, class_column, 5, 1, 2, 3, 4]]
-    print(det)
-    for i in det.tolist():
-        if i[1] == 'ball':
-            print(i)
-    ##########
-    ##########
+        print(ann)
+        # for i in ann.tolist():
+        #     if i[1] == 'ball':
+        #         print(i)
+        ##########
+        anns.append(ann)
 
-    xywh_to_norm_xxyy(ann)
-    xywh_to_norm_xxyy(det)
+        ##########
+        det = pd.read_csv(f'{det_folder}/{sample}/deter_base_bbox.tsv', sep='\t', header=None)
+        det.iloc[:, 0] = det.iloc[:, 0].apply(lambda x: f'{sample}:{x:03d}')
+        class_column = 7  # 6 is enum, 7 is string
+        det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball')
+        det = det.values[:, [0, class_column, 5, 1, 2, 3, 4]]
+        print(det)
+        if PRINT_DET_BALL:
+            for i in det.tolist():
+                if i[1] == 'ball':
+                    print(i)
+        ##########
+        dets.append(det)
+
+    anns = np.concatenate(anns)
+    dets = np.concatenate(dets)
+
+    xywh_to_norm_xxyy(anns)
+    xywh_to_norm_xxyy(dets)
 
     # ann:'ImageID', 'LabelName', 'XMin', 'XMax', 'YMin', 'YMax'
     # det:'ImageID', 'LabelName', 'Conf', 'XMin', 'XMax', 'YMin', 'YMax'
-    mean_ap, average_precisions = mean_average_precision_for_boxes(ann, det, verbose=True)
+    mean_ap, average_precisions = mean_average_precision_for_boxes(anns, dets, iou_threshold=0.5, verbose=True)
     print(mean_ap)
     print(average_precisions)
