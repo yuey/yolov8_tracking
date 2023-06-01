@@ -23,7 +23,7 @@ VIDEO_NUM_FRAMES = 750
 
 
 PRINT_DET_BALL = False
-PRINT_SAMPLE_NUMPY = False
+PRINT_SAMPLE_NUMPY = True
 
 
 def xywh_to_norm_xxyy(box_seq):
@@ -78,7 +78,11 @@ if __name__ == '__main__':
     # Version 2
 
     gt_folder = '/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT'
-    det_folder = '/home/ubuntu/dev/yolov8_tracking/runs/detr_baseline_all_test_metrics'
+
+    model_name = 'deter'
+    # model_name = 'gddino'
+
+    det_folder = f'/home/ubuntu/dev/yolov8_tracking/runs/{model_name}_baseline_all_test_metrics'
 
     anns, dets = [], []
     for sample in SAMPLES:
@@ -103,10 +107,10 @@ if __name__ == '__main__':
         anns.append(ann)
 
         ##########
-        det = pd.read_csv(f'{det_folder}/{sample}/deter_base_bbox.tsv', sep='\t', header=None)
+        det = pd.read_csv(f'{det_folder}/{sample}/{model_name}_base_bbox.tsv', sep='\t', header=None)
         det.iloc[:, 0] = det.iloc[:, 0].apply(lambda x: f'{sample}:{x:03d}')
         class_column = 7  # 6 is enum, 7 is string
-        det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball')
+        det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball').replace('player','person').replace('soccer', 'ball')
         det = det.values[:, [0, class_column, 5, 1, 2, 3, 4]]
         if PRINT_SAMPLE_NUMPY:
             print('det =', det)
