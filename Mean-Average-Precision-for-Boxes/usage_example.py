@@ -17,8 +17,13 @@ SAMPLES = [
     "SNMOT-192", "SNMOT-193", "SNMOT-194", "SNMOT-195", "SNMOT-196", "SNMOT-197", "SNMOT-198", "SNMOT-199", "SNMOT-200",
 ]
 
+IOU_THRESHOLD = 0.5
+
+VIDEO_NUM_FRAMES = 750
+
 
 PRINT_DET_BALL = False
+PRINT_SAMPLE_NUMPY = False
 
 
 def xywh_to_norm_xxyy(box_seq):
@@ -63,6 +68,8 @@ if __name__ == '__main__':
     expected_norm_xxyy= np.array([[0.1, 0.6, 0.2, 0.5]])
     assert((test_xywh == expected_norm_xxyy).all())
 
+    np.set_printoptions(edgeitems=4)
+
     # # Version 1
     # annotations_file = 'example/annotations.csv'
     # detections_file = 'example/detections.csv'
@@ -87,7 +94,8 @@ if __name__ == '__main__':
         ann.iloc[:, ann_class_column] = ann.iloc[:, ann_class_column].astype(str).apply(map_numbers_to_strings)
         ann = ann.values[:, [0, 1, 2, 3, 4, 5]]
 
-        print(ann)
+        if PRINT_SAMPLE_NUMPY:
+            print('ann =', ann)
         # for i in ann.tolist():
         #     if i[1] == 'ball':
         #         print(i)
@@ -100,13 +108,18 @@ if __name__ == '__main__':
         class_column = 7  # 6 is enum, 7 is string
         det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball')
         det = det.values[:, [0, class_column, 5, 1, 2, 3, 4]]
-        print(det)
+        if PRINT_SAMPLE_NUMPY:
+            print('det =', det)
         if PRINT_DET_BALL:
             for i in det.tolist():
                 if i[1] == 'ball':
                     print(i)
         ##########
         dets.append(det)
+        frames_with_det = len(set(det[:,0]))
+        if frames_with_det != VIDEO_NUM_FRAMES:
+            print('******', sample, f'[{frames_with_det}]')
+    
 
     anns = np.concatenate(anns)
     dets = np.concatenate(dets)
@@ -116,6 +129,7 @@ if __name__ == '__main__':
 
     # ann:'ImageID', 'LabelName', 'XMin', 'XMax', 'YMin', 'YMax'
     # det:'ImageID', 'LabelName', 'Conf', 'XMin', 'XMax', 'YMin', 'YMax'
-    mean_ap, average_precisions = mean_average_precision_for_boxes(anns, dets, iou_threshold=0.5, verbose=True)
+    print('iou_threshold =', IOU_THRESHOLD)
+    mean_ap, average_precisions = mean_average_precision_for_boxes(anns, dets, iou_threshold=IOU_THRESHOLD, verbose=True)
     print(mean_ap)
     print(average_precisions)
