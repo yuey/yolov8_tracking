@@ -23,7 +23,7 @@ VIDEO_NUM_FRAMES = 750
 
 
 PRINT_DET_BALL = False
-PRINT_SAMPLE_NUMPY = True
+PRINT_SAMPLE_NUMPY = False
 
 
 def xywh_to_norm_xxyy(box_seq):
@@ -47,6 +47,29 @@ def xywh_to_norm_xxyy(box_seq):
     box_seq[:, [new_ymin_col, new_ymax_col]] /= IMG_HEIGHT
 
 
+def ccwh_to_norm_xxyy(box_seq):
+    xc_col = -4
+    yc_col = -3
+    width_col = -2
+    height_col = -1
+
+    new_xmin_col = -4
+    new_xmax_col = -3
+    new_ymin_col = -2
+    new_ymax_col = -1
+    w_2 = box_seq[:, width_col] / 2
+    h_2 = box_seq[:, height_col] / 2
+    box_seq[:, width_col] = box_seq[:, xc_col] + w_2
+    box_seq[:, height_col] = box_seq[:, yc_col] + h_2
+    box_seq[:, xc_col] -= w_2
+    box_seq[:, yc_col] -= h_2
+    # from xyxy to xxyy
+    box_seq[:, [new_xmax_col, new_ymin_col]] = box_seq[:, [width_col, yc_col]]
+    # scale to normalize
+    box_seq[:, [new_xmin_col, new_xmax_col]] /= IMG_WIDTH
+    box_seq[:, [new_ymin_col, new_ymax_col]] /= IMG_HEIGHT
+
+
 def parse_gameinfo(gt_ini):
     gameinfo_dict = {}
     with open(gt_ini) as f:
@@ -63,26 +86,32 @@ def parse_gameinfo(gt_ini):
 
 if __name__ == '__main__':
 
+    # unit tests
+    expected_norm_xxyy= np.array([[0.1, 0.6, 0.2, 0.5]])
     test_xywh= np.array([[192.0, 216.0, 960.0, 324.0]])
     xywh_to_norm_xxyy(test_xywh)
-    expected_norm_xxyy= np.array([[0.1, 0.6, 0.2, 0.5]])
     assert((test_xywh == expected_norm_xxyy).all())
+    test_ccwh= np.array([[672.0, 378.0, 960.0, 324.0]])
+    ccwh_to_norm_xxyy(test_ccwh)
+    assert((test_ccwh == expected_norm_xxyy).all())
 
     np.set_printoptions(edgeitems=4)
 
-    # # Version 1
-    # annotations_file = 'example/annotations.csv'
-    # detections_file = 'example/detections.csv'
-    # mean_ap, average_precisions = mean_average_precision_for_boxes(annotations_file, detections_file)
-
-    # Version 2
-
     gt_folder = '/home/ubuntu/dev/yolov8_tracking/val_utils/data/SNMOT'
 
-    model_name = 'deter'
-    # model_name = 'gddino'
+    model_folder_and_tsv = [
+        ('detr_baseline_all_test_metrics', 'deter_base_bbox'),
+        ('gddino_baseline_all_test_metrics', 'gddino_base_bbox'),
+        ('yolo_baseline_all_test', 'yolo_base_bbox'),
+        ('yolo_tuned_all_test', 'yolo_tuned_bbox'),
+    ]
 
-    det_folder = f'/home/ubuntu/dev/yolov8_tracking/runs/{model_name}_baseline_all_test_metrics'
+    ##@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##
+    MODEL_INDEX = 2 ##@@@@@@@@@@@@@##
+    ##@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##
+    model_folder, model_tsv = model_folder_and_tsv[MODEL_INDEX]
+
+    det_folder = f'/home/ubuntu/dev/yolov8_tracking/runs/{model_folder}'
 
     anns, dets = [], []
     for sample in SAMPLES:
@@ -107,10 +136,10 @@ if __name__ == '__main__':
         anns.append(ann)
 
         ##########
-        det = pd.read_csv(f'{det_folder}/{sample}/{model_name}_base_bbox.tsv', sep='\t', header=None)
+        det = pd.read_csv(f'{det_folder}/{sample}/{model_tsv}.tsv', sep='\t', header=None)
         det.iloc[:, 0] = det.iloc[:, 0].apply(lambda x: f'{sample}:{x:03d}')
         class_column = 7  # 6 is enum, 7 is string
-        det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball').replace('player','person').replace('soccer', 'ball')
+        det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball').replace('player','person').replace('soccer', 'ball').replace('goalkeepers','person').replace('referee','person')
         det = det.values[:, [0, class_column, 5, 1, 2, 3, 4]]
         if PRINT_SAMPLE_NUMPY:
             print('det =', det)
@@ -126,13 +155,17 @@ if __name__ == '__main__':
     
 
     anns = np.concatenate(anns)
-    dets = np.concatenate(dets)
-
     xywh_to_norm_xxyy(anns)
-    xywh_to_norm_xxyy(dets)
+
+    dets = np.concatenate(dets)
+    if MODEL_INDEX in (2, 3):
+        ccwh_to_norm_xxyy(dets)
+    else:
+        xywh_to_norm_xxyy(dets)
 
     # ann:'ImageID', 'LabelName', 'XMin', 'XMax', 'YMin', 'YMax'
     # det:'ImageID', 'LabelName', 'Conf', 'XMin', 'XMax', 'YMin', 'YMax'
+    print('model is ', model_folder)
     print('iou_threshold =', IOU_THRESHOLD)
     mean_ap, average_precisions = mean_average_precision_for_boxes(anns, dets, iou_threshold=IOU_THRESHOLD, verbose=True)
     print(mean_ap)
