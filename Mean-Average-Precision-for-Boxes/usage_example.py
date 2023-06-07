@@ -102,71 +102,70 @@ if __name__ == '__main__':
     model_folder_and_tsv = [
         ('detr_baseline_all_test_metrics', 'deter_base_bbox'),
         ('gddino_baseline_all_test_metrics', 'gddino_base_bbox'),
+        ('faster-rcnn_baseline_all_test_metrics', 'faster_rcnn_baseline'),
+        ('mask-rcnn_baseline_all_test_metrics', 'maskRCNN_baseline'),
         ('yolo_baseline_all_test', 'yolo_base_bbox'),
         ('yolo_tuned_all_test', 'yolo_tuned_bbox'),
     ]
 
-    ##@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##
-    MODEL_INDEX = 2 ##@@@@@@@@@@@@@##
-    ##@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##
-    model_folder, model_tsv = model_folder_and_tsv[MODEL_INDEX]
+    for model_folder, model_tsv in model_folder_and_tsv:
 
-    det_folder = f'/home/ubuntu/dev/yolov8_tracking/runs/{model_folder}'
+        det_folder = f'/home/ubuntu/dev/yolov8_tracking/runs/{model_folder}'
 
-    anns, dets = [], []
-    for sample in SAMPLES:
+        anns, dets = [], []
+        for sample in SAMPLES:
 
-        ##########
-        ann = pd.read_csv(f'{gt_folder}/test/{sample}/gt/gt.txt', header=None)
-        ann.iloc[:, 0] = ann.iloc[:, 0].apply(lambda x: f'{sample}:{x:03d}')
-        # parse gameinfo (trackletID to our class string here)
-        ann_class_column = 1
-        gameinfo_dict = parse_gameinfo(f'{gt_folder}/test/{sample}/gameinfo.ini')
-        def map_numbers_to_strings(number):
-            return 'ball' if gameinfo_dict[number] == 'ball' else 'person'
-        ann.iloc[:, ann_class_column] = ann.iloc[:, ann_class_column].astype(str).apply(map_numbers_to_strings)
-        ann = ann.values[:, [0, 1, 2, 3, 4, 5]]
+            ##########
+            ann = pd.read_csv(f'{gt_folder}/test/{sample}/gt/gt.txt', header=None)
+            ann.iloc[:, 0] = ann.iloc[:, 0].apply(lambda x: f'{sample}:{x:03d}')
+            # parse gameinfo (trackletID to our class string here)
+            ann_class_column = 1
+            gameinfo_dict = parse_gameinfo(f'{gt_folder}/test/{sample}/gameinfo.ini')
+            def map_numbers_to_strings(number):
+                return 'ball' if gameinfo_dict[number] == 'ball' else 'person'
+            ann.iloc[:, ann_class_column] = ann.iloc[:, ann_class_column].astype(str).apply(map_numbers_to_strings)
+            ann = ann.values[:, [0, 1, 2, 3, 4, 5]]
 
-        if PRINT_SAMPLE_NUMPY:
-            print('ann =', ann)
-        # for i in ann.tolist():
-        #     if i[1] == 'ball':
-        #         print(i)
-        ##########
-        anns.append(ann)
+            if PRINT_SAMPLE_NUMPY:
+                print('ann =', ann)
+            # for i in ann.tolist():
+            #     if i[1] == 'ball':
+            #         print(i)
+            ##########
+            anns.append(ann)
 
-        ##########
-        det = pd.read_csv(f'{det_folder}/{sample}/{model_tsv}.tsv', sep='\t', header=None)
-        det.iloc[:, 0] = det.iloc[:, 0].apply(lambda x: f'{sample}:{x:03d}')
-        class_column = 7  # 6 is enum, 7 is string
-        det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball').replace('player','person').replace('soccer', 'ball').replace('goalkeepers','person').replace('referee','person')
-        det = det.values[:, [0, class_column, 5, 1, 2, 3, 4]]
-        if PRINT_SAMPLE_NUMPY:
-            print('det =', det)
-        if PRINT_DET_BALL:
-            for i in det.tolist():
-                if i[1] == 'ball':
-                    print(i)
-        ##########
-        dets.append(det)
-        frames_with_det = len(set(det[:,0]))
-        if frames_with_det != VIDEO_NUM_FRAMES:
-            print('******', sample, f'[{frames_with_det}]')
-    
+            ##########
+            det = pd.read_csv(f'{det_folder}/{sample}/{model_tsv}.tsv', sep='\t', header=None)
+            det.iloc[:, 0] = det.iloc[:, 0].apply(lambda x: f'{sample}:{x:03d}')
+            class_column = 7  # 6 is enum, 7 is string
+            det.iloc[:, class_column] = det.iloc[:, class_column].replace('sports ball', 'ball').replace('player','person').replace('soccer', 'ball').replace('goalkeepers','person').replace('referee','person')
+            det = det.values[:, [0, class_column, 5, 1, 2, 3, 4]]
+            if PRINT_SAMPLE_NUMPY:
+                print('det =', det)
+            if PRINT_DET_BALL:
+                for i in det.tolist():
+                    if i[1] == 'ball':
+                        print(i)
+            ##########
+            dets.append(det)
+            frames_with_det = len(set(det[:,0]))
+            if frames_with_det != VIDEO_NUM_FRAMES:
+                print('******', sample, f'[{frames_with_det}]')
+        
 
-    anns = np.concatenate(anns)
-    xywh_to_norm_xxyy(anns)
+        anns = np.concatenate(anns)
+        xywh_to_norm_xxyy(anns)
 
-    dets = np.concatenate(dets)
-    if MODEL_INDEX in (2, 3):
-        ccwh_to_norm_xxyy(dets)
-    else:
-        xywh_to_norm_xxyy(dets)
+        dets = np.concatenate(dets)
+        if model_folder.startswith('yolo_'):
+            ccwh_to_norm_xxyy(dets)
+        else:
+            xywh_to_norm_xxyy(dets)
 
-    # ann:'ImageID', 'LabelName', 'XMin', 'XMax', 'YMin', 'YMax'
-    # det:'ImageID', 'LabelName', 'Conf', 'XMin', 'XMax', 'YMin', 'YMax'
-    print('model is ', model_folder)
-    print('iou_threshold =', IOU_THRESHOLD)
-    mean_ap, average_precisions = mean_average_precision_for_boxes(anns, dets, iou_threshold=IOU_THRESHOLD, verbose=True)
-    print(mean_ap)
-    print(average_precisions)
+        # ann:'ImageID', 'LabelName', 'XMin', 'XMax', 'YMin', 'YMax'
+        # det:'ImageID', 'LabelName', 'Conf', 'XMin', 'XMax', 'YMin', 'YMax'
+        print('model is ', model_folder)
+        print('iou_threshold =', IOU_THRESHOLD)
+        mean_ap, average_precisions = mean_average_precision_for_boxes(anns, dets, iou_threshold=IOU_THRESHOLD, verbose=True)
+        print(mean_ap)
+        print(average_precisions)
