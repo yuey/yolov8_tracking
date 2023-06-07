@@ -57,6 +57,9 @@ def get_detections(table):
             res[id][label] = []
         box = [xmin[i], ymin[i], xmax[i], ymax[i], scores[i]]
         res[id][label].append(box)
+    for id, content in res.items():
+        for label, box in content.items():
+            res[id][label] = sorted(box, key=lambda x: x[4], reverse=True)
 
     return res
 
@@ -209,7 +212,7 @@ def mean_average_precision_for_boxes(ann, pred, iou_threshold=0.5, exclude_not_i
         # compute average precision
         average_precision = _compute_ap(recall, precision)
         average_precisions[label] = average_precision, num_annotations
-        if verbose:
+        if True or verbose:
             s1 = "{:30s} | {:.6f} | {:7d}".format(label, average_precision, int(num_annotations))
             print(s1)
 
@@ -223,6 +226,6 @@ def mean_average_precision_for_boxes(ann, pred, iou_threshold=0.5, exclude_not_i
         mean_ap = precision / present_classes
     else:
         mean_ap = 0
-    if verbose:
+    if True or verbose:
         print('mAP: {:.6f}'.format(mean_ap))
     return mean_ap, average_precisions

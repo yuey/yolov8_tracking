@@ -149,8 +149,8 @@ if __name__ == '__main__':
             ##########
             dets.append(det)
             frames_with_det = len(set(det[:,0]))
-            if frames_with_det != VIDEO_NUM_FRAMES:
-                print('******', sample, f'[{frames_with_det}]')
+            # if frames_with_det != VIDEO_NUM_FRAMES:
+            #     print('******', sample, f'[{frames_with_det}]')
         
 
         anns = np.concatenate(anns)
@@ -166,6 +166,6 @@ if __name__ == '__main__':
         # det:'ImageID', 'LabelName', 'Conf', 'XMin', 'XMax', 'YMin', 'YMax'
         print('model is ', model_folder)
         print('iou_threshold =', IOU_THRESHOLD)
-        mean_ap, average_precisions = mean_average_precision_for_boxes(anns, dets, iou_threshold=IOU_THRESHOLD, verbose=True)
-        print(mean_ap)
-        print(average_precisions)
+        mean_ap, average_precisions = mean_average_precision_for_boxes(anns, dets, iou_threshold=IOU_THRESHOLD, verbose=False)
+        # print(mean_ap)
+        # print(average_precisions)
